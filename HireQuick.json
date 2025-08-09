@@ -1,0 +1,412 @@
+{
+  "name": "HireQuick",
+  "nodes": [
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        912,
+        -96
+      ],
+      "id": "2ea34c10-5bf8-4cdf-b9fb-240347847d3a",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            },
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "simple": false,
+        "filters": {
+          "q": "has:attachment filename:pdf in:anywhere",
+          "readStatus": "unread"
+        },
+        "options": {
+          "downloadAttachments": true
+        }
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "b46a86e1-fa3e-4e3d-988b-89633ff062dc",
+      "name": "Trigger & File Intake",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "DlNfSo7K90Th64eR",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "binaryPropertyName": "attachment_0",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        272,
+        112
+      ],
+      "id": "0d0bc923-8a4f-4530-96f8-59bb62fb2b93",
+      "name": "File Processing"
+    },
+    {
+      "parameters": {
+        "inputDataFieldName": "attachment_0",
+        "name": "={{ $binary?.attachment_0?.fileName || ($json.subject || 'resume') + '.pdf' }}\n",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1KXJvbcc5tD8giQ3x5sgVMSflQLVFxEfw",
+          "mode": "list",
+          "cachedResultName": "HireQuick",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1KXJvbcc5tD8giQ3x5sgVMSflQLVFxEfw"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        272,
+        -112
+      ],
+      "id": "41850bb9-4a85-4249-bab2-76e2475392b0",
+      "name": "File Storage",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "1zd1fxBmp9tlMPAd",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Extract the following from the resume text AND the email metadata below.\nReturn ONLY valid JSON with these keys:\n{\n  \"name\": \"\",\n  \"email\": \"\",\n  \"phone\": \"\",\n  \"education\": \"\",\n  \"skills\": \"\",\n  \"experience\": \"\",\n  \"summary\": \"\",\n  \"position\": \"\"\n}\n\nRules:\n- \"position\": infer from the EMAIL SUBJECT first; if unclear, look in EMAIL BODY or RESUME TEXT.\n- If a field is missing, return \"\" (empty string). Do not add extra keys. No prose.\n\nEMAIL SUBJECT:\n{{$node[\"Trigger & File Intake\"].json[\"subject\"]}}\n\nEMAIL BODY (plain text if available):\n{{ $node[\"Trigger & File Intake\"].json[\"textPlain\"] || $node[\"Trigger & File Intake\"].json[\"snippet\"] || \"\" }}\n\nRESUME TEXT:\n{{$node[\"File Processing\"].json[\"text\"]}}\n"
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        528,
+        112
+      ],
+      "id": "7e354d7f-9725-42a6-bb37-41d6dba4d0c5",
+      "name": "AI Parsing",
+      "notesInFlow": true,
+      "credentials": {
+        "openAiApi": {
+          "id": "NbDYXwY06qrl6uCK",
+          "name": "n8n free OpenAI API credits"
+        }
+      },
+      "onError": "continueErrorOutput",
+      "notes": "If parsing fails, use red error output → Manual Review email."
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1vzT6r-eTZryOO0GVJ4EvRkKQvP88bxq23YYtbuUjEac/edit?gid=",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1vzT6r-eTZryOO0GVJ4EvRkKQvP88bxq23YYtbuUjEac/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "CV Link": "={{ $json.webViewLink }}",
+            "Name": "={{ $json.message.content.name }}",
+            "Email": "={{ $json.message.content.email }}",
+            "Phone": "={{ $json.message.content.phone }}",
+            "Education": "={{ $json.message.content.education }}",
+            "Skills": "={{ $json.message.content.skills }}",
+            "Experience": "={{ $json.message.content.experience }}",
+            "Summary": "={{ $json.message.content.summary }}",
+            "Position": "={{ $json.message.content.position }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Position",
+              "displayName": "Position",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Phone",
+              "displayName": "Phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Education",
+              "displayName": "Education",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Skills",
+              "displayName": "Skills",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Experience",
+              "displayName": "Experience",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Summary",
+              "displayName": "Summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "CV Link",
+              "displayName": "CV Link",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        1168,
+        -240
+      ],
+      "id": "d19a3800-789c-4a33-a8a4-ff11acc588cb",
+      "name": "Data Logging",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "I2WQ9bfycP4IP7Dg",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "vidhushika.remote@gmail.com",
+        "subject": "=New Resume: {{$json[\"message\"][\"content\"][\"position\"]}}",
+        "emailType": "text",
+        "message": "=Name: {{$json[\"message\"][\"content\"][\"name\"]}}  \nEmail: {{$json[\"message\"][\"content\"][\"email\"]}}  \nPhone: {{$json[\"message\"][\"content\"][\"phone\"]}}  \n\nPosition Applied For: {{$json[\"message\"][\"content\"][\"position\"]}}  \n\nEducation: {{$json[\"message\"][\"content\"][\"education\"]}}  \n\nSkills: {{$json[\"message\"][\"content\"][\"skills\"]}}  \n\nExperience: {{$json[\"message\"][\"content\"][\"experience\"]}}  \n\nSummary: {{$json[\"message\"][\"content\"][\"summary\"]}}  \n\nDownload CV: {{$json[\"webViewLink\"] || (\"https://drive.google.com/uc?export=download&id=\" + $json[\"id\"])}}\n\n📊 View Overall Application Dashboard: https://lookerstudio.google.com/reporting/8e2c0a3e-d6e4-4e20-96f1-2c6e2e5fca9b\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1168,
+        112
+      ],
+      "id": "b93ac619-291e-4522-ba47-56a17eb358a5",
+      "name": "HR Summary Email (Success Path)",
+      "webhookId": "c56a7129-9711-4ec8-9d2a-656fbb032ec3",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "DlNfSo7K90Th64eR",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "vidhushika.remote@gmail.con",
+        "subject": "=Resume could not be processed — {{$node[\"Trigger & File Intake\"].json[\"subject\"]}}",
+        "emailType": "text",
+        "message": "=We received a new application, but the AI parser could not extract details automatically.  \n\nSubject: {{$node[\"Trigger & File Intake\"].json[\"subject\"]}}  \n\nPlease check the original email in the recruitment inbox for the attached CV.",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        912,
+        320
+      ],
+      "id": "d92349e5-0fbc-4e50-b281-36a738d54153",
+      "name": "Error Handling (AI Parse Fail)",
+      "webhookId": "422ca3f4-7fb8-490e-8c1d-8e02f680bdbb",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "DlNfSo7K90Th64eR",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "HR Summary Email (Success Path)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Data Logging",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trigger & File Intake": {
+      "main": [
+        [
+          {
+            "node": "File Storage",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "File Processing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "File Processing": {
+      "main": [
+        [
+          {
+            "node": "AI Parsing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "File Storage": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Parsing": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "Error Handling (AI Parse Fail)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Data Logging": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "5cbde660-9a41-4971-9ef6-fff39469ee42",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "df8fecf7821cd6b0fa43e0fadae20979248de067b3b7597ab5aa8404676da943"
+  },
+  "id": "LjBdk4nwte4wwrYZ",
+  "tags": []
+}
