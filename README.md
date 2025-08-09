@@ -49,6 +49,6 @@ This workflow automates the process of:
 
 ## 📹 Video Demo
 
-[**Click here to Watch Video Walkthrough**](loom.com/share/02cf8920a5e54a2a9f9a5255e2629d4c)
+[**Click here to Watch Video Walkthrough**](https://www.loom.com/share/02cf8920a5e54a2a9f9a5255e2629d4c)
 
 
