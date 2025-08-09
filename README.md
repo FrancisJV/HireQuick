@@ -11,6 +11,7 @@ This workflow automates the process of:
 7. Handling errors (manual review email if parsing fails).
 
 **n8n Workflow:**  
+
 ![Workflow Screenshot](samples/workflow.PNG)
 
 ---
@@ -27,20 +28,27 @@ This workflow automates the process of:
 - OpenAI API – Parse resumes into structured fields
 
 **Google Sheet:**  
+
 ![Google Sheet Screenshot](samples/google_sheets.PNG)  
 
 **HR Email:**  
+
 ![HR Email Screenshot](samples/hr_email.PNG)
 
 ---
 
 ## 📊 Dashboard
-[**View Live Dashboard**](https://lookerstudio.google.com/reporting/8e2c0a3e-d6e4-4e20-96f1-2c6e2e5fca9b)  
+
+[**Click here to View Live Dashboard**](https://lookerstudio.google.com/reporting/8e2c0a3e-d6e4-4e20-96f1-2c6e2e5fca9b)
 
 **Dashboard Screenshot:**  
+
 ![Dashboard Screenshot](samples/dashboard.PNG)
 
 ---
 
 ## 📹 Video Demo
-[**Watch Video Walkthrough**](https://drive.google.com/drive/folders/1UPc8PFf0yrVH71ei057wf8K283g7bIaP?usp=sharing)
+
+[**Click here to Watch Video Walkthrough**](https://drive.google.com/drive/folders/1UPc8PFf0yrVH71ei057wf8K283g7bIaP?usp=sharing)
+
+
