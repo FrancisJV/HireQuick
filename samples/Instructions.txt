@@ -1,0 +1,23 @@
+HireQuick – n8n Resume Automation Workflow
+
+Steps to Run:
+1. Import hirequick.json into your n8n workspace.
+2. Set up credentials:
+   - Gmail API
+   - Google Drive API
+   - Google Sheets API
+   - OpenAI API
+3. Update:
+   - HR email address
+   - Google Drive folder for CV storage
+   - Google Sheets document for logging
+4. Start the workflow. It will:
+   - Fetch CVs from Gmail (PDF attachments)
+   - Extract text and parse details with OpenAI
+   - Save CV to Google Drive
+   - Log details in Google Sheets
+   - Send HR email with CV link and dashboard link
+5. View live dashboard here:
+   https://lookerstudio.google.com/reporting/8e2c0a3e-d6e4-4e20-96f1-2c6e2e5fca9b
+6. Watch the demo video here:
+   https://drive.google.com/drive/folders/1UPc8PFf0yrVH71ei057wf8K283g7bIaP?usp=sharing
